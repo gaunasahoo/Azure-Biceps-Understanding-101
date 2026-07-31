@@ -1,0 +1,86 @@
+All Deployment steps :
+
+#az deployment sub list --output table
+#az deployment sub show --name main --output json
+#az deployment sub show --name main --output json
+#az deployment operation sub list --name main --output table
+#az deployment operation sub list \
+  --name main \
+  --query "[?properties.provisioningState=='Failed']" \
+  --output json
+
+#Powershell:
+# List all subscription-level deployments
+Get-AzSubscriptionDeployment | Format-Table Name, ProvisioningState, Timestamp
+
+# Get specific deployment details
+Get-AzSubscriptionDeployment -Name "main"
+
+# Get correlation ID and inner operations
+Get-AzSubscriptionDeploymentOperation -DeploymentName "main"
+===================================================================
+
+1. Logging In (az login)
+To authenticate your Azure CLI session:
+
+Bash
+az login
+Useful Options:
+Tenant Specific Login: If your account belongs to multiple Entra ID (Azure AD) tenants:
+
+Bash
+az login --tenant <tenant-id-or-domain>
+Service Principal Login (for CI/CD pipelines):
+
+Bash
+az login --service-principal -u <app-id> -p <secret-or-certificate> --tenant <tenant-id>
+Device Code Login (for headless environments/remote SSH):
+
+Bash
+az login --use-device-code
+2. Managing Subscriptions (az account)
+Since your Bicep framework deploys at the Subscription scope, target the correct subscription before executing az deployment sub create.
+
+List Available Subscriptions
+To view all subscriptions your account has access to:
+
+Bash
+az account list --output table
+To see all subscriptions including disabled/inactive ones:
+
+Bash
+az account list --all --output table
+View Current Active Subscription
+To confirm which subscription your commands will currently target:
+
+Bash
+az account show --output table
+Set/Switch Active Subscription
+To switch your active CLI context to the target subscription where you want to deploy the policies:
+
+By Subscription ID:
+
+Bash
+az account set --subscription "00000000-0000-0000-0000-000000000000"
+By Subscription Name:
+
+Bash
+az account set --subscription "My-Target-Subscription-Name"
+Complete Deployment Sequence
+Combining authentication, subscription targeting, and deployment:
+
+Bash
+# 1. Authenticate to Azure
+az login
+
+# 2. Target the correct subscription
+az account set --subscription "00000000-0000-0000-0000-000000000000"
+
+# 3. Verify target context
+az account show --output table
+
+# 4. Deploy your Policy-as-Code framework
+az deployment sub create \
+  --location westeurope \
+  --template-file main.bicep \
+  --parameters '@deploymentParameters.json'
